@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { SUIT_COUNTS, type SuitCount } from "../game/types";
 import { averageWinMs, winPercent, type Stats } from "../stats";
+import { THEMES } from "../themes";
 
 export function formatTime(ms: number): string {
   const total = Math.floor(ms / 1000);
@@ -165,6 +166,37 @@ export function StatsDialog({ stats, suits, onReset, onClose }: StatsProps) {
             </button>
           </>
         )}
+      </div>
+    </Modal>
+  );
+}
+
+interface ThemeProps {
+  current: string;
+  onPick: (id: string) => void;
+  onClose: () => void;
+}
+
+export function ThemeDialog({ current, onPick, onClose }: ThemeProps) {
+  return (
+    <Modal title="Background" onClose={onClose}>
+      <div className="swatches">
+        {THEMES.map((t) => (
+          <button
+            key={t.id}
+            className={`swatch ${t.id === current ? "chosen" : ""}`}
+            onClick={() => onPick(t.id)}
+            aria-pressed={t.id === current}
+          >
+            <span className="swatch-bg" style={{ background: t.background }} />
+            <span>{t.label}</span>
+          </button>
+        ))}
+      </div>
+      <div className="actions">
+        <button className="primary" onClick={onClose}>
+          Done
+        </button>
       </div>
     </Modal>
   );

@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Board } from "./components/Board";
-import { DIFFICULTY_LABEL, NewGameDialog, StatsDialog, WinDialog, formatTime } from "./components/Dialogs";
+import { DIFFICULTY_LABEL, NewGameDialog, StatsDialog, ThemeDialog, WinDialog, formatTime } from "./components/Dialogs";
+import { applyTheme, themeById } from "./themes";
 import { randomSeed } from "./game/deal";
 import { findHints, type Hint } from "./game/hint";
 import { canDeal, isWon } from "./game/rules";
@@ -9,7 +10,7 @@ import type { Action, SuitCount } from "./game/types";
 import { emptyStats, recordLoss, recordWin, type Stats } from "./stats";
 import { loadPrefs, loadSession, loadStats, savePrefs, saveSession, saveStats } from "./storage";
 
-type Dialog = "new" | "stats" | "win" | null;
+type Dialog = "new" | "stats" | "theme" | "win" | null;
 
 export function App() {
   const [session, setSession] = useState<Session>(() => loadSession() ?? createSession(randomSeed(), loadPrefs().suits));
@@ -18,6 +19,9 @@ export function App() {
   const [hint, setHint] = useState<Hint | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const hintIndex = useRef(0);
+  const [themeId, setThemeId] = useState(() => loadPrefs().theme);
+
+  useLayoutEffect(() => applyTheme(themeById(themeId)), [themeId]);
 
   const state = currentState(session);
   const won = isWon(state);
@@ -123,21 +127,10 @@ export function App() {
 
   return (
     <div className="app">
-      <header className="toolbar">
-        <div className="buttons">
-          <button onClick={() => setDialog("new")} title="New game (N)">
-            New
-          </button>
-          <button onClick={onUndo} disabled={!canUndo(session)} title="Undo (Ctrl+Z)">
-            Undo
-          </button>
-          <button onClick={onHint} disabled={won} title="Hint (H)">
-            Hint
-          </button>
-          <button onClick={() => setDialog("stats")} title="Statistics">
-            Stats
-          </button>
-        </div>
+      <Board state={state} onAction={onAction} hint={hint} />
+
+      {/* At the bottom, for thumbs: info first so that when it wraps, the buttons get the lowest row. */}
+      <footer className="toolbar">
         <div className="info">
           <span title={`Game #${session.seed}`}>
             {DIFFICULTY_LABEL[session.suits]} <span className="muted">#{session.seed}</span>
@@ -150,9 +143,25 @@ export function App() {
           </span>
           <span className="time">{formatTime(session.elapsedMs)}</span>
         </div>
-      </header>
-
-      <Board state={state} onAction={onAction} hint={hint} />
+        {/* Rarely used on the left, Undo on the far right under the thumb. */}
+        <div className="buttons">
+          <button onClick={() => setDialog("stats")} title="Statistics">
+            Stats
+          </button>
+          <button onClick={() => setDialog("theme")} title="Background">
+            Theme
+          </button>
+          <button onClick={() => setDialog("new")} title="New game (N)">
+            New
+          </button>
+          <button onClick={onHint} disabled={won} title="Hint (H)">
+            Hint
+          </button>
+          <button className="undo" onClick={onUndo} disabled={!canUndo(session)} title="Undo (Ctrl+Z)">
+            Undo
+          </button>
+        </div>
+      </footer>
 
       {toast && (
         <div className="toast" role="status">
@@ -173,6 +182,16 @@ export function App() {
           stats={stats}
           suits={session.suits}
           onReset={() => updateStats(emptyStats())}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog === "theme" && (
+        <ThemeDialog
+          current={themeId}
+          onPick={(id) => {
+            setThemeId(id);
+            savePrefs({ theme: id });
+          }}
           onClose={() => setDialog(null)}
         />
       )}

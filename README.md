@@ -5,7 +5,9 @@ Spider solitaire in the browser, hosted on GitHub Pages: https://jeremyweirich.g
 - 1, 2 or 4 suits (4 is the default)
 - Drag a run, or click a card to send it to the best spot
 - Unlimited undo, hints (press again to cycle), numbered deals you can replay
-- The game in progress and stats (win rate, fastest and average win, best score, streaks) are kept in localStorage
+- Toolbar at the bottom for thumbs, with Undo on the far right
+- Backgrounds: felt, beach, ocean, sunset, wood, night (`src/themes.ts`)
+- The game in progress, chosen background and stats (win rate, fastest and average win, best score, streaks) are kept in localStorage
 
 Keys: `Ctrl/Cmd+Z` undo, `H` hint, `D` deal, `N` new game.
 

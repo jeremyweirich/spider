@@ -1,6 +1,7 @@
 import { deserialize, serialize, type Session } from "./game/session";
 import { SUIT_COUNTS, type SuitCount } from "./game/types";
 import { parseStats, type Stats } from "./stats";
+import { DEFAULT_THEME } from "./themes";
 
 const GAME_KEY = "spider.game.v1";
 const STATS_KEY = "spider.stats.v1";
@@ -31,12 +32,15 @@ export const saveStats = (s: Stats): void => write(STATS_KEY, s);
 
 export interface Prefs {
   suits: SuitCount;
+  theme: string;
 }
 
 export function loadPrefs(): Prefs {
   const p = read(PREFS_KEY) as Partial<Prefs> | null;
   const suits = p && SUIT_COUNTS.includes(p.suits as SuitCount) ? (p.suits as SuitCount) : 4;
-  return { suits };
+  const theme = typeof p?.theme === "string" ? p.theme : DEFAULT_THEME;
+  return { suits, theme };
 }
 
-export const savePrefs = (p: Prefs): void => write(PREFS_KEY, p);
+/** Update some preferences, keeping the rest. */
+export const savePrefs = (change: Partial<Prefs>): void => write(PREFS_KEY, { ...loadPrefs(), ...change });
